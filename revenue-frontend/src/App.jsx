@@ -9,7 +9,7 @@ function App() {
   const [revenueData, setRevenueData] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:8080/api/revenue/all")
+    axios.post("http://localhost:8080/api/revenue/all")
       .then((response) => {
         console.log("Fetched revenue data:", response.data);
         setRevenueData(response.data);
