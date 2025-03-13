@@ -6,26 +6,17 @@ function App() {
   const [revenueData, setRevenueData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const API_URL = "http://localhost:8080/api/revenue/all"; // Your Spring Boot API
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(API_URL);
-        if (response.data && Array.isArray(response.data)) {
-          setRevenueData(response.data);
-        } else {
-          throw new Error("Invalid data format from API");
-        }
-      } catch (err) {
-        console.error("Error fetching revenue data:", err);
-        setError("Failed to load revenue data. Please try again later.");
-      } finally {
+    axios.get("http://localhost:8080/api/revenue/all")
+      .then(response => {
+        setRevenueData(response.data);
         setLoading(false);
-      }
-    };
-
-    fetchData();
+      })
+      .catch(error => {
+        setError("Failed to load revenue data. Please try again later.");
+        setLoading(false);
+      });
   }, []);
 
   return (
@@ -33,7 +24,7 @@ function App() {
       <h1 className="text-3xl font-bold text-blue-600">Kenya National Revenue</h1>
 
       {loading ? (
-        <p className="text-gray-500">Loading revenue data...</p>
+        <p className="text-gray-600">Loading data...</p>
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : (

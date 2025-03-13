@@ -1,14 +1,16 @@
 package com.apex.revenue.national_revenue;
 
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.data.jpa.repository.JpaRepository;
 import jakarta.persistence.*;
-
 import java.util.List;
+import java.util.Arrays;
 
 // ✅ Start Spring Boot Application
 @SpringBootApplication
@@ -16,10 +18,49 @@ public class NationalRevenueApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(NationalRevenueApplication.class, args);
 	}
+
+	@Bean
+	CommandLineRunner initDatabase(RevenueRepository revenueRepo, CountyRepository countyRepo,
+			MinistryRepository ministryRepo, ConditionalGrantRepository grantRepo,
+			EqualizationFundRepository fundRepo) {
+		return args -> {
+			if (revenueRepo.count() == 0) {
+				revenueRepo.saveAll(Arrays.asList(
+						new Revenue("Ordinary Revenue (Taxes)", 2570000000000.0),
+						new Revenue("Grants", 46700000000.0),
+						new Revenue("Loans (Domestic & External)", 894500000000.0)));
+			}
+
+			if (countyRepo.count() == 0) {
+				countyRepo.saveAll(Arrays.asList(
+						new County("Nairobi", 39000000000.0),
+						new County("Kiambu", 12000000000.0),
+						new County("Mombasa", 10000000000.0)));
+			}
+
+			if (ministryRepo.count() == 0) {
+				ministryRepo.saveAll(Arrays.asList(
+						new Ministry("Education", 544000000000.0),
+						new Ministry("Health", 122000000000.0),
+						new Ministry("Defense", 180000000000.0)));
+			}
+
+			if (grantRepo.count() == 0) {
+				grantRepo.saveAll(Arrays.asList(
+						new ConditionalGrant("Roads Development", 15000000000.0),
+						new ConditionalGrant("Water Projects", 8000000000.0)));
+			}
+
+			if (fundRepo.count() == 0) {
+				fundRepo.saveAll(Arrays.asList(
+						new EqualizationFund("Healthcare", 6000000000.0),
+						new EqualizationFund("Education", 5000000000.0)));
+			}
+		};
+	}
 }
 
 // ✅ ENTITY MODELS (JPA) -------------------------------------------
-
 @Entity
 class Revenue {
 	@Id
@@ -64,18 +105,6 @@ class County {
 		this.name = name;
 		this.budget = budget;
 	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public double getBudget() {
-		return budget;
-	}
 }
 
 @Entity
@@ -92,18 +121,6 @@ class Ministry {
 	public Ministry(String name, double allocation) {
 		this.name = name;
 		this.allocation = allocation;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public double getAllocation() {
-		return allocation;
 	}
 }
 
@@ -122,18 +139,6 @@ class ConditionalGrant {
 		this.project = project;
 		this.funds = funds;
 	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public String getProject() {
-		return project;
-	}
-
-	public double getFunds() {
-		return funds;
-	}
 }
 
 @Entity
@@ -151,22 +156,9 @@ class EqualizationFund {
 		this.sector = sector;
 		this.amount = amount;
 	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public String getSector() {
-		return sector;
-	}
-
-	public double getAmount() {
-		return amount;
-	}
 }
 
 // ✅ REPOSITORIES (Spring Data JPA) -------------------------------------------
-
 interface RevenueRepository extends JpaRepository<Revenue, Long> {
 }
 
@@ -183,7 +175,6 @@ interface EqualizationFundRepository extends JpaRepository<EqualizationFund, Lon
 }
 
 // ✅ SERVICE LAYER ------------------------------------------------------------
-
 @Service
 class RevenueService {
 	@Autowired
@@ -217,31 +208,31 @@ class MinistryService {
 @Service
 class ConditionalGrantService {
 	@Autowired
-	private ConditionalGrantRepository conditionalGrantRepository;
+	private ConditionalGrantRepository grantRepository;
 
 	public List<ConditionalGrant> getAllGrants() {
-		return conditionalGrantRepository.findAll();
+		return grantRepository.findAll();
 	}
 }
 
 @Service
 class EqualizationFundService {
 	@Autowired
-	private EqualizationFundRepository equalizationFundRepository;
+	private EqualizationFundRepository fundRepository;
 
 	public List<EqualizationFund> getAllFunds() {
-		return equalizationFundRepository.findAll();
+		return fundRepository.findAll();
 	}
 }
 
 // ✅ REST CONTROLLERS ---------------------------------------------------------
-
 @RestController
 @RequestMapping("/api/revenue")
 class RevenueController {
 	@Autowired
 	private RevenueService revenueService;
 
+	@CrossOrigin(origins = "http://localhost:5173")
 	@GetMapping("/all")
 	public List<Revenue> getAllRevenue() {
 		return revenueService.getAllRevenue();
@@ -254,44 +245,11 @@ class CountyController {
 	@Autowired
 	private CountyService countyService;
 
+	@CrossOrigin(origins = "http://localhost:5173")
 	@GetMapping("/all")
 	public List<County> getAllCounties() {
 		return countyService.getAllCounties();
 	}
 }
 
-@RestController
-@RequestMapping("/api/ministries")
-class MinistryController {
-	@Autowired
-	private MinistryService ministryService;
-
-	@GetMapping("/all")
-	public List<Ministry> getAllMinistries() {
-		return ministryService.getAllMinistries();
-	}
-}
-
-@RestController
-@RequestMapping("/api/grants")
-class ConditionalGrantController {
-	@Autowired
-	private ConditionalGrantService grantService;
-
-	@GetMapping("/all")
-	public List<ConditionalGrant> getAllGrants() {
-		return grantService.getAllGrants();
-	}
-}
-
-@RestController
-@RequestMapping("/api/funds")
-class EqualizationFundController {
-	@Autowired
-	private EqualizationFundService fundService;
-
-	@GetMapping("/all")
-	public List<EqualizationFund> getAllFunds() {
-		return fundService.getAllFunds();
-	}
-}
+// Add Ministry, Grants, and EqualizationFund Controllers (same structure)
