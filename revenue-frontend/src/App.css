@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-100;
+}
+
+.container {
+  @apply flex justify-center items-center min-h-screen;
+}
+
+.chart-box {
+  @apply p-6 bg-white shadow-lg rounded-lg;
+}
+
+.chart-title {
+  @apply text-xl font-bold mb-4;
+}
